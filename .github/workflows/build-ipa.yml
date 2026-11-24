@@ -10,7 +10,7 @@ on:
 jobs:
   build-ipa:
     name: Build & Package IronHome IPA
-    runs-on: macos-14
+    runs-on: macos-latest
 
     steps:
       - name: Checkout Repository
@@ -18,7 +18,7 @@ jobs:
 
       - name: Select Latest Xcode Version
         run: |
-          sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
+          sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
 
       - name: Build Archive (Unsigned for Sideloadly)
