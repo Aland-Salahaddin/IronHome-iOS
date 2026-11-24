@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>IronHome - Beginner Home Hypertrophy Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏋️</text></svg>">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #141b2d;
+      --card-subtle: #1c253d;
+      --accent-blue: #2563eb;
+      --accent-glow: #3b82f6;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-teal: #14b8a6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #273554;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #030712;
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+    /* Mobile Device Bezel Simulator */
+    .device-frame {
+      width: 100%;
+      max-width: 430px;
+      height: 900px;
+      max-height: 95vh;
+      background: var(--bg);
+      border-radius: 46px;
+      border: 8px solid #232b3e;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.08);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    /* Dynamic Island Notch */
+    .device-notch {
+      width: 120px;
+      height: 30px;
+      background: #000;
+      border-radius: 20px;
+      margin: 10px auto 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 12px;
+    }
+    .notch-camera { width: 10px; height: 10px; border-radius: 50%; background: #0c1a2f; border: 1px solid #1e293b; }
+    .notch-sensor { width: 10px; height: 10px; border-radius: 50%; background: #111; }
+    
+    .screen-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px 100px;
+      display: none;
+    }
+    .tab-content.active { display: block; }
+    
+    /* App Header */
+    .app-header {
+      padding: 12px 16px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .app-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .badge-chip {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .chip-blue { background: rgba(37,99,235,0.2); color: #60a5fa; border: 1px solid rgba(37,99,235,0.3); }
+    .chip-green { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .chip-orange { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    .chip-teal { background: rgba(20,184,166,0.2); color: #2dd4bf; border: 1px solid rgba(20,184,166,0.3); }
+    
+    /* Hero Banner */
+    .hero-card {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 10px 25px rgba(30,58,138,0.3);
+    }
+    .hero-card h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .hero-card p { font-size: 13px; color: #cbd5e1; margin-bottom: 12px; }
+    .hero-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    
+    /* Schedule List */
+    .day-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .day-card:hover { transform: translateY(-2px); border-color: var(--accent-glow); }
+    .day-num {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--card-subtle);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+    .day-num span { font-size: 9px; font-weight: 900; opacity: 0.7; }
+    .day-info { flex: 1; }
+    .day-title { font-size: 15px; font-weight: 700; }
+    .day-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    
+    /* Active Workout Session Modal */
+    .workout-modal {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg);
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+    }
+    .workout-modal.open { display: flex; }
+    .modal-nav {
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      background: #0d1322;
+    }
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px 120px;
+    }
+    
+    /* Exercise Tracker Card */
+    .exercise-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-color);
+    }
+    .exercise-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .ex-name { font-size: 16px; font-weight: 700; color: #fff; }
+    .ex-muscles { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .ex-target-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: #60a5fa;
+      background: rgba(37,99,235,0.15);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    
+    /* Set Table */
+    .set-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .set-table th {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 6px 4px;
+      text-align: center;
+    }
+    .set-table th:first-child { text-align: left; }
+    .set-table th:last-child { text-align: right; }
+    .set-row {
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .set-row.completed { background: rgba(16,185,129,0.1); }
+    .set-row td {
+      padding: 8px 4px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .set-row td:first-child { text-align: left; }
+    .set-row td:last-child { text-align: right; }
+    
+    .stepper-btn {
+      width: 24px;
+      height: 26px;
+      background: var(--card-subtle);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .val-display {
+      display: inline-block;
+      width: 40px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .check-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border-color);
+      background: transparent;
+      color: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .check-btn.done {
+      background: var(--accent-green);
+      border-color: var(--accent-green);
+      color: #fff;
+    }
+    
+    /* Progression Milestone Alert */
+    .progression-banner {
+      background: rgba(16,185,129,0.15);
+      border: 1px solid rgba(16,185,129,0.4);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .progression-banner .icon { font-size: 18px; line-height: 1; }
+    .progression-banner .text { font-size: 11px; color: #a7f3d0; line-height: 1.4; }
+    .progression-banner .text strong { color: #fff; display: block; margin-bottom: 2px; }
+    
+    /* Floating Rest Timer Bar */
+    .floating-timer-bar {
+      position: absolute;
+      bottom: 72px;
+      left: 12px;
+      right: 12px;
+      background: linear-gradient(135deg, #1d4ed8, #4338ca);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      z-index: 60;
+      animation: slideUp 0.3s ease;
+    }
+    .floating-timer-bar.active { display: flex; }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    /* Dedicated Rest Timer Screen */
+    .timer-circle-container {
+      position: relative;
+      width: 230px;
+      height: 230px;
+      margin: 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .timer-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .timer-track { fill: none; stroke: var(--card-subtle); stroke-width: 14; }
+    .timer-progress {
+      fill: none;
+      stroke: var(--accent-blue);
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-dasharray: 628;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 0.9s linear;
+    }
+    .timer-text-wrap {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .timer-digits {
+      font-size: 44px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -1px;
+    }
+    
+    /* Preset Buttons */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .preset-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px 6px;
+      color: #fff;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .preset-btn.active {
+      background: var(--accent-blue);
+      border-color: var(--accent-glow);
+    }
+    .preset-btn strong { display: block; font-size: 16px; margin-bottom: 2px; }
+    .preset-btn span { font-size: 10px; color: var(--text-muted); }
+    
+    /* Action Buttons */
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #fff;
+      font-weight: 700;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: none;
+      width: 100%;
+      cursor: pointer;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.4);
+    }
+    .btn-success { background: var(--accent-green); box-shadow: 0 4px 14px rgba(16,185,129,0.4); }
+    .btn-secondary { background: var(--card-subtle); color: #fff; border: 1px solid var(--border-color); }
+    
+    /* Bottom Navigation Bar */
+    .tab-bar {
+      height: 64px;
+      background: #090e1b;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 40;
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      width: 20%;
+      transition: color 0.2s;
+    }
+    .tab-item.active { color: var(--accent-glow); }
+    .tab-item svg { width: 20px; height: 20px; fill: currentColor; }
+  </style>
+</head>
+<body>
+
+<div class="device-frame">
+  <!-- Dynamic Island -->
+  <div class="device-notch">
+    <div class="notch-sensor"></div>
+    <div class="notch-camera"></div>
+  </div>
+
+  <div class="screen-container">
+    <!-- TAB 1: SCHEDULE -->
+    <div id="tab-schedule" class="tab-content active">
+      <div class="app-header">
+        <div>
+          <div class="app-title">IronHome</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Home Dumbbell & Barbell Routine</div>
+        </div>
+        <div class="badge-chip chip-blue">4-Day Split</div>
+      </div>
+
+      <div class="hero-card">
+        <h2>Beginner Hypertrophy</h2>
+        <p>Upper/Lower routine with flat bench, dumbbells, and barbell only. No gym machines required.</p>
+        <div class="hero-tags">
+          <span class="badge-chip chip-blue">Dumbbells</span>
+          <span class="badge-chip chip-blue">Barbell</span>
+          <span class="badge-chip chip-blue">Flat Bench</span>
+          <span class="badge-chip chip-orange">~60 Min/Day</span>
+        </div>
+      </div>
+
+      <div style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-muted);">WEEKLY SCHEDULE</div>
+      <div id="schedule-list"></div>
+    </div>
+
+    <!-- TAB 2: TIMER -->
+    <div id="tab-timer" class="tab-content">
+      <div class="app-header">
+        <div class="app-title">Rest Timer</div>
+        <div class="badge-chip chip-orange">Hypertrophy Engine</div>
+      </div>
+
+      <div class="timer-circle-container">
+        <svg class="timer-svg" viewBox="0 0 220 220">
+          <circle class="timer-track" cx="110" cy="110" r="95"></circle>
+          <circle id="timer-progress-ring" class="timer-progress" cx="110" cy="110" r="95"></circle>
+        </svg>
+        <div class="timer-text-wrap">
+          <div id="timer-countdown-digits" class="timer-digits">01:30</div>
+          <div id="timer-state-label" style="font-size: 11px; font-weight: 800; color: #60a5fa;">RESTING</div>
+        </div>
+      </div>
+
+      <div class="preset-grid">
+        <button class="preset-btn" onclick="startTimerWithSeconds(60)">
+          <strong>60s</strong>
+          <span>Arms / Delts</span>
+        </button>
+        <button class="preset-btn active" onclick="startTimerWithSeconds(90)">
+          <strong>90s</strong>
+          <span>Standard</span>
+        </button>
+        <button class="preset-btn" onclick="startTimerWithSeconds(120)">
+          <strong>120s</strong>
+          <span>Heavy Lifts</span>
+        </button>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 10px;">
+        <button class="btn-primary" style="flex: 2;" id="timer-toggle-btn" onclick="toggleTimer()">Pause</button>
+        <button class="btn-primary btn-secondary" style="flex: 1;" onclick="addTimerSeconds(15)">+15s</button>
+        <button class="btn-primary btn-secondary" style="flex: 1;" onclick="resetTimer()">Reset</button>
+      </div>
+
+      <div style="margin-top: 24px; background: var(--card-bg); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #a5b4fc;">💡 Hypertrophy Tip</div>
+        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+          Compound lifts (Squats, Bench, Rows) recruit high-threshold motor units that need 90–120s of recovery. Isolations (Curls, Raises) thrive on 60–90s to maintain metabolic pump.
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: EXERCISES -->
+    <div id="tab-exercises" class="tab-content">
+      <div class="app-header">
+        <div class="app-title">Exercise Guide</div>
+        <div class="badge-chip chip-teal">Flat Bench & Free Weights</div>
+      </div>
+      <div id="exercise-library-list"></div>
+    </div>
+
+    <!-- TAB 4: HISTORY -->
+    <div id="tab-history" class="tab-content">
+      <div class="app-header">
+        <div class="app-title">Workout History</div>
+        <div class="badge-chip chip-green">Progress Overload</div>
+      </div>
+      <div id="history-stats-banner" style="display: flex; gap: 8px; margin-bottom: 16px;"></div>
+      <div id="history-session-list"></div>
+    </div>
+
+    <!-- TAB 5: SETTINGS -->
+    <div id="tab-settings" class="tab-content">
+      <div class="app-header">
+        <div class="app-title">Settings & Sideload</div>
+        <div class="badge-chip chip-blue">v1.0.0</div>
+      </div>
+
+      <div class="hero-card" style="background: linear-gradient(135deg, #064e3b, #0f172a); border-color: rgba(16,185,129,0.3);">
+        <h2 style="color: #34d399;">Sideloadly IPA Ready</h2>
+        <p>This app compiles directly into a sideloadable <code>IronHome.ipa</code> using GitHub Actions (<code>macos-latest</code>) or macOS xcodebuild for free Apple ID installation.</p>
+        <div style="font-size: 11px; color: #94a3b8;">
+          • Free Apple ID cert: 7 days validity<br>
+          • Workout data is 100% preserved upon re-signing<br>
+          • Trust developer in iOS: Settings → VPN & Device Management
+        </div>
+      </div>
+
+      <div style="background: var(--card-bg); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px; border: 1px solid var(--border-color);">
+        <div style="font-weight: 700; font-size: 14px; margin-bottom: 8px;">Rest Timer Auto-Start</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; color: var(--text-muted);">Start timer upon checking off a set</span>
+          <input type="checkbox" id="setting-autotimer" checked style="width: 20px; height: 20px; accent-color: var(--accent-blue);">
+        </div>
+      </div>
+
+      <button class="btn-primary btn-secondary" style="color: #ef4444;" onclick="clearWorkoutData()">Clear Stored Workout History</button>
+    </div>
+
+    <!-- FLOATING REST TIMER BAR -->
+    <div id="floating-timer" class="floating-timer-bar">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">⏱️</span>
+        <div>
+          <div style="font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.7);">REST TIMER</div>
+          <div id="float-time-digits" style="font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums;">01:30</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="addTimerSeconds(15)" style="background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">+15s</button>
+        <button onclick="resetTimer()" style="background: rgba(255,255,255,0.2); border: none; color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 12px; cursor: pointer;">✕</button>
+      </div>
+    </div>
+
+    <!-- WORKOUT TRACKER MODAL -->
+    <div id="workout-modal" class="workout-modal">
+      <div class="modal-nav">
+        <div>
+          <div id="active-routine-title" style="font-size: 15px; font-weight: 800;">Day 1 — Upper A</div>
+          <div id="active-routine-time" style="font-size: 11px; color: var(--text-muted);">00:00 elapsed</div>
+        </div>
+        <button onclick="closeWorkoutModal()" style="background: var(--card-subtle); border: 1px solid var(--border-color); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer;">Minimize</button>
+      </div>
+      <div class="modal-body" id="active-exercises-container"></div>
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #0c1322; padding: 12px 16px; border-top: 1px solid var(--border-color); display: flex; gap: 10px;">
+        <button class="btn-primary btn-success" style="flex: 2;" onclick="finishActiveWorkout()">Finish Workout 🎉</button>
+        <button class="btn-primary btn-secondary" style="flex: 1; color: #ef4444;" onclick="discardActiveWorkout()">Discard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab('schedule', this)">
+      <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+      <span>Schedule</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('timer', this)">
+      <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+      <span>Timer</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('exercises', this)">
+      <svg viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43 1.43 1.43 2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/></svg>
+      <span>Exercises</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('history', this)">
+      <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+      <span>History</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('settings', this)">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+      <span>Settings</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ROUTINE DATA MODEL
+  const ROUTINE = [
+    {
+      id: "day-1-upper-a",
+      dayName: "Day 1",
+      title: "Upper A (Upper Body)",
+      sub: "Chest, Back, Shoulders & Arms",
+      isRest: false,
+      exercises: [
+        { id: "ex_flat_db_bench", name: "Flat Dumbbell Bench Press", sets: 3, minReps: 8, maxReps: 12, target: "Chest, Anterior Delts, Triceps", equipment: "Dumbbells + Flat Bench", form: "Pin shoulder blades down and back into the flat bench. Lower slowly for 2-3s with wrists stacked over elbows." },
+        { id: "ex_bb_bent_row", name: "Barbell Bent-Over Row", sets: 3, minReps: 8, maxReps: 12, target: "Back Width/Thickness, Rear Delts, Biceps", equipment: "Barbell", form: "Hinge at hips to 45°, brace core tightly, pull bar to navel leading with elbows." },
+        { id: "ex_seated_db_ohp", name: "Seated Dumbbell Overhead Press", sets: 3, minReps: 10, maxReps: 12, target: "Shoulders, Triceps, Core", equipment: "Dumbbells + Flat Bench", form: "Sit tall on flat bench, press overhead in neutral arc without arching lower back." },
+        { id: "ex_db_bicep_curl", name: "Dumbbell Bicep Curl", sets: 3, minReps: 10, maxReps: 15, target: "Biceps, Forearms", equipment: "Dumbbells", form: "Keep elbows pinned at sides. Supinate wrists at peak contraction." },
+        { id: "ex_db_tricep_overhead_ext", name: "Dumbbell Tricep Overhead Extension", sets: 3, minReps: 10, maxReps: 15, target: "Triceps Long Head", equipment: "Dumbbell + Flat Bench", form: "Cup top plate with both hands, lower behind head keeping elbows tucked forward." }
+      ]
+    },
+    {
+      id: "day-2-lower-a",
+      dayName: "Day 2",
+      title: "Lower A (Lower Body)",
+      sub: "Quads, Glutes, Hamstrings & Core",
+      isRest: false,
+      exercises: [
+        { id: "ex_bb_back_squat", name: "Barbell Back Squat", sets: 3, minReps: 8, maxReps: 10, target: "Quads, Glutes, Hamstrings", equipment: "Barbell", form: "Descend until thighs hit parallel, knees tracking over toes, spine neutral." },
+        { id: "ex_bb_rdl", name: "Barbell Romanian Deadlift", sets: 3, minReps: 10, maxReps: 12, target: "Hamstrings, Glutes, Posterior Chain", equipment: "Barbell", form: "Push hips back, slight knee bend, shave bar down shins until deep hamstring stretch." },
+        { id: "ex_db_bulgarian_split_squat", name: "Dumbbell Bulgarian Split Squat", sets: 3, minReps: 8, maxReps: 10, target: "Quads, Glutes (Per Leg)", equipment: "Dumbbells + Flat Bench", form: "Elevate rear foot on the flat bench, drop hips straight down until front thigh is parallel." },
+        { id: "ex_plank", name: "Plank", sets: 3, minReps: 30, maxReps: 45, target: "Core Endurance & Bracing", equipment: "Bodyweight", form: "Straight line head to heels, squeeze glutes, breathe smoothly for 30-45s." }
+      ]
+    },
+    {
+      id: "day-3-rest",
+      dayName: "Day 3",
+      title: "Rest / Light Recovery",
+      sub: "Active Regeneration & Tissue Repair",
+      isRest: true,
+      guidance: "Full rest or light 20-30m walk, gentle mobility stretching, hydration, and 7-9 hours sleep."
+    },
+    {
+      id: "day-4-upper-b",
+      dayName: "Day 4",
+      title: "Upper B (Upper Body)",
+      sub: "Chest, Back, Delts & Arms",
+      isRest: false,
+      exercises: [
+        { id: "ex_flat_bb_bench", name: "Flat Barbell Bench Press", sets: 3, minReps: 8, maxReps: 10, target: "Pec Major, Front Delts, Triceps", equipment: "Barbell + Flat Bench", form: "Retract shoulder blades, lower bar to sternum with elbows at ~45°, press in slight J-curve." },
+        { id: "ex_single_arm_db_row", name: "Single-Arm Dumbbell Row", sets: 3, minReps: 10, maxReps: 12, target: "Lats, Upper Back, Biceps", equipment: "Dumbbell + Flat Bench", form: "Knee and hand anchored on flat bench. Row dumbbell up toward hip pocket." },
+        { id: "ex_db_lateral_raise", name: "Dumbbell Lateral Raise", sets: 3, minReps: 12, maxReps: 15, target: "Side Delts (Lateral Shoulder)", equipment: "Dumbbells", form: "Lead with elbows, strict controlled tempo, slight forward lean." },
+        { id: "ex_db_hammer_curl", name: "Dumbbell Hammer Curl", sets: 3, minReps: 10, maxReps: 12, target: "Brachialis, Biceps, Forearm Grip", equipment: "Dumbbells", form: "Neutral grip palms facing each other throughout the curl." },
+        { id: "ex_db_skull_crusher", name: "Dumbbell Skull Crusher", sets: 3, minReps: 10, maxReps: 12, target: "Triceps Isolation", equipment: "Dumbbells + Flat Bench", form: "Lie on flat bench, lower dumbbells beside ears, extend through elbows." }
+      ]
+    },
+    {
+      id: "day-5-lower-b",
+      dayName: "Day 5",
+      title: "Lower B & Optional Accessory",
+      sub: "Quads, Glutes & Optional Arms/Core Block",
+      isRest: false,
+      exercises: [
+        { id: "ex_db_goblet_squat", name: "Dumbbell Goblet Squat", sets: 3, minReps: 10, maxReps: 12, target: "Quads, Glutes, Core Bracing", equipment: "Dumbbell", form: "Hold heavy dumbbell against sternum, squat deep between knees." },
+        { id: "ex_bb_hip_thrust", name: "Barbell Hip Thrust", sets: 3, minReps: 10, maxReps: 12, target: "Glutes & Hip Extension", equipment: "Barbell + Flat Bench", form: "Upper back pivoted against flat bench edge, drive heels down to extend hips horizontal." },
+        { id: "ex_db_reverse_lunge", name: "Dumbbell Reverse Lunge", sets: 3, minReps: 10, maxReps: 10, target: "Quads, Glutes, Balance", equipment: "Dumbbells", form: "Step backward, lower back knee gently, push through front heel to return." },
+        { id: "ex_optional_accessory", name: "Optional Accessory Block", sets: 2, minReps: 12, maxReps: 15, target: "Arms, Core, or Light Cardio", equipment: "User Choice", form: "15-20 min finisher if energy permits; skip if feeling fatigued." }
+      ]
+    },
+    {
+      id: "day-6-rest",
+      dayName: "Day 6",
+      title: "Weekend Rest & Growth",
+      sub: "Full Recovery & Neuromuscular Rest",
+      isRest: true,
+      guidance: "Muscles grow when resting. High protein intake, light walking, full rest."
+    },
+    {
+      id: "day-7-rest",
+      dayName: "Day 7",
+      title: "Rest & Prep for Next Week",
+      sub: "Review Progression & Set Weights",
+      isRest: true,
+      guidance: "Check if you hit top reps (e.g. 12 reps) to increase weight next week by +1kg to +2.5kg."
+    }
+  ];
+
+  // STATE MANAGEMENT & LOCAL STORAGE
+  let workoutHistory = JSON.parse(localStorage.getItem("ironhome_history") || "[]");
+  if (workoutHistory.length === 0) {
+    // Seed sample initial history
+    workoutHistory.push({
+      title: "Upper A (Upper Body)",
+      date: new Date(Date.now() - 86400000 * 2).toISOString(),
+      durationMin: 55,
+      totalVolumeKg: 3420,
+      totalSets: 15,
+      exercises: [
+        { name: "Flat Dumbbell Bench Press", topWeight: 14, reps: "12, 12, 12" },
+        { name: "Barbell Bent-Over Row", topWeight: 35, reps: "10, 10, 9" },
+        { name: "Seated Dumbbell Overhead Press", topWeight: 10, reps: "12, 11, 10" }
+      ]
+    });
+    localStorage.setItem("ironhome_history", JSON.stringify(workoutHistory));
+  }
+
+  let activeSessionData = null;
+  let activeWorkoutTimer = null;
+  let activeWorkoutSeconds = 0;
+
+  // REST TIMER ENGINE
+  let timerTotalSeconds = 90;
+  let timerRemainingSeconds = 90;
+  let timerInterval = null;
+  let isTimerRunning = false;
+
+  // INITIALIZE UI
+  function renderSchedule() {
+    const list = document.getElementById("schedule-list");
+    list.innerHTML = "";
+    ROUTINE.forEach(day => {
+      const card = document.createElement("div");
+      card.className = "day-card";
+      card.onclick = () => openDayWorkout(day);
+      card.innerHTML = `
+        <div class="day-num" style="color: ${day.isRest ? 'var(--accent-teal)' : 'var(--accent-blue)'};">
+          ${day.dayName.replace("Day ", "D")}
+          <span>${day.isRest ? 'REST' : 'LIFT'}</span>
+        </div>
+        <div class="day-info">
+          <div class="day-title">${day.title}</div>
+          <div class="day-sub">${day.sub}</div>
+        </div>
+        <div style="font-size: 16px; color: var(--text-muted);">›</div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  function renderExercises() {
+    const list = document.getElementById("exercise-library-list");
+    list.innerHTML = "";
+    const all = [];
+    ROUTINE.forEach(d => {
+      if (d.exercises) d.exercises.forEach(e => { if (!all.find(x => x.id === e.id)) all.push(e); });
+    });
+    all.forEach(ex => {
+      const card = document.createElement("div");
+      card.className = "exercise-card";
+      card.innerHTML = `
+        <div class="exercise-card-header">
+          <div>
+            <div class="ex-name">${ex.name}</div>
+            <div class="ex-muscles">${ex.target}</div>
+          </div>
+          <div class="ex-target-badge">${ex.sets} sets × ${ex.minReps}–${ex.maxReps}</div>
+        </div>
+        <div style="font-size: 11px; color: var(--accent-orange); margin-bottom: 6px;">🛠️ ${ex.equipment}</div>
+        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">${ex.form}</div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  function renderHistory() {
+    const banner = document.getElementById("history-stats-banner");
+    const totalVolume = workoutHistory.reduce((acc, h) => acc + (h.totalVolumeKg || 0), 0);
+    const totalSets = workoutHistory.reduce((acc, h) => acc + (h.totalSets || 0), 0);
+    banner.innerHTML = `
+      <div style="flex:1; background:var(--card-bg); padding:10px; border-radius:10px; text-align:center; border:1px solid var(--border-color);">
+        <div style="font-size:16px; font-weight:800; color:#fbbf24;">${workoutHistory.length}</div>
+        <div style="font-size:10px; color:var(--text-muted);">WORKOUTS</div>
+      </div>
+      <div style="flex:1; background:var(--card-bg); padding:10px; border-radius:10px; text-align:center; border:1px solid var(--border-color);">
+        <div style="font-size:16px; font-weight:800; color:#60a5fa;">${Math.round(totalVolume)}kg</div>
+        <div style="font-size:10px; color:var(--text-muted);">VOLUME</div>
+      </div>
+      <div style="flex:1; background:var(--card-bg); padding:10px; border-radius:10px; text-align:center; border:1px solid var(--border-color);">
+        <div style="font-size:16px; font-weight:800; color:#34d399;">${totalSets}</div>
+        <div style="font-size:10px; color:var(--text-muted);">SETS</div>
+      </div>
+    `;
+
+    const list = document.getElementById("history-session-list");
+    list.innerHTML = "";
+    workoutHistory.forEach(h => {
+      const card = document.createElement("div");
+      card.className = "day-card";
+      card.innerHTML = `
+        <div class="day-num" style="color: var(--accent-green);">✓</div>
+        <div class="day-info">
+          <div class="day-title">${h.title}</div>
+          <div class="day-sub">${new Date(h.date).toLocaleDateString()} • ${h.durationMin} min • ${Math.round(h.totalVolumeKg)} kg vol</div>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  // ACTIVE WORKOUT ENGINE
+  function openDayWorkout(day) {
+    if (day.isRest) {
+      alert(`Recovery Guidance for ${day.title}:\n\n${day.guidance}`);
+      return;
+    }
+    activeSessionData = {
+      dayId: day.id,
+      title: day.title,
+      exercises: day.exercises.map(ex => {
+        // Find previous performance
+        let prevWeight = 15;
+        let prevReps = "10, 10, 10";
+        for (const h of workoutHistory) {
+          const match = (h.exercises || []).find(x => x.name === ex.name);
+          if (match) { prevWeight = match.topWeight || 15; prevReps = match.reps; break; }
+        }
+        return {
+          id: ex.id,
+          name: ex.name,
+          target: ex.target,
+          equipment: ex.equipment,
+          minReps: ex.minReps,
+          maxReps: ex.maxReps,
+          prevWeight: prevWeight,
+          prevReps: prevReps,
+          sets: Array.from({ length: ex.sets }, (_, i) => ({
+            setNum: i + 1,
+            weightKg: prevWeight,
+            reps: ex.minReps,
+            completed: false
+          }))
+        };
+      })
+    };
+
+    document.getElementById("active-routine-title").innerText = day.title;
+    renderActiveExercises();
+    document.getElementById("workout-modal").classList.add("open");
+
+    // Stopwatch
+    activeWorkoutSeconds = 0;
+    if (activeWorkoutTimer) clearInterval(activeWorkoutTimer);
+    activeWorkoutTimer = setInterval(() => {
+      activeWorkoutSeconds++;
+      const m = Math.floor(activeWorkoutSeconds / 60).toString().padStart(2, "0");
+      const s = (activeWorkoutSeconds % 60).toString().padStart(2, "0");
+      document.getElementById("active-routine-time").innerText = `${m}:${s} elapsed`;
+    }, 1000);
+  }
+
+  function renderActiveExercises() {
+    const container = document.getElementById("active-exercises-container");
+    container.innerHTML = "";
+    activeSessionData.exercises.forEach((ex, exIndex) => {
+      const card = document.createElement("div");
+      card.className = "exercise-card";
+
+      // Check progression trigger
+      const allDone = ex.sets.length > 0 && ex.sets.every(s => s.completed);
+      const allHitTop = allDone && ex.sets.every(s => s.reps >= ex.maxReps);
+      const isBarbell = ex.equipment.includes("Barbell");
+      const bumpDesc = isBarbell ? "+2.5 kg" : "+1.0 to +2.0 kg";
+
+      let rowsHtml = "";
+      ex.sets.forEach((set, sIndex) => {
+        rowsHtml += `
+          <tr class="set-row ${set.completed ? 'completed' : ''}">
+            <td style="font-weight:bold; font-size:12px;">${set.setNum}</td>
+            <td style="font-size:11px; color:var(--text-muted);">${ex.prevWeight}kg × ${ex.minReps}</td>
+            <td>
+              <button class="stepper-btn" onclick="adjustWeight(${exIndex}, ${sIndex}, -1)">-</button>
+              <span class="val-display">${set.weightKg}</span>
+              <button class="stepper-btn" onclick="adjustWeight(${exIndex}, ${sIndex}, 1)">+</button>
+            </td>
+            <td>
+              <button class="stepper-btn" onclick="adjustReps(${exIndex}, ${sIndex}, -1)">-</button>
+              <span class="val-display">${set.reps}</span>
+              <button class="stepper-btn" onclick="adjustReps(${exIndex}, ${sIndex}, 1)">+</button>
+            </td>
+            <td>
+              <button class="check-btn ${set.completed ? 'done' : ''}" onclick="toggleSetCheck(${exIndex}, ${sIndex})">
+                ${set.completed ? '✓' : ''}
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      card.innerHTML = `
+        <div class="exercise-card-header">
+          <div>
+            <div class="ex-name">${ex.name}</div>
+            <div class="ex-muscles">${ex.target}</div>
+          </div>
+          <div class="ex-target-badge">${ex.sets.length} sets × ${ex.minReps}–${ex.maxReps}</div>
+        </div>
+        <table class="set-table">
+          <thead>
+            <tr>
+              <th>SET</th>
+              <th>PREV</th>
+              <th>WEIGHT (KG)</th>
+              <th>REPS</th>
+              <th>LOG</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        ${allHitTop ? `
+          <div class="progression-banner">
+            <span class="icon">🚀</span>
+            <div class="text">
+              <strong>PROGRESSION MILESTONE HIT!</strong>
+              You hit ${ex.maxReps} reps on all sets. Ready to overload: add ${bumpDesc} next session!
+            </div>
+          </div>
+        ` : ''}
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function adjustWeight(exIndex, sIndex, delta) {
+    const cur = activeSessionData.exercises[exIndex].sets[sIndex].weightKg;
+    activeSessionData.exercises[exIndex].sets[sIndex].weightKg = Math.max(0, cur + delta);
+    renderActiveExercises();
+  }
+
+  function adjustReps(exIndex, sIndex, delta) {
+    const cur = activeSessionData.exercises[exIndex].sets[sIndex].reps;
+    activeSessionData.exercises[exIndex].sets[sIndex].reps = Math.max(1, cur + delta);
+    renderActiveExercises();
+  }
+
+  function toggleSetCheck(exIndex, sIndex) {
+    const s = activeSessionData.exercises[exIndex].sets[sIndex];
+    s.completed = !s.completed;
+    renderActiveExercises();
+
+    if (s.completed && document.getElementById("setting-autotimer").checked) {
+      startTimerWithSeconds(90);
+    }
+  }
+
+  function closeWorkoutModal() {
+    document.getElementById("workout-modal").classList.remove("open");
+  }
+
+  function finishActiveWorkout() {
+    if (!activeSessionData) return;
+    let vol = 0;
+    let completedSetsCount = 0;
+    const exSummaries = [];
+
+    activeSessionData.exercises.forEach(ex => {
+      const done = ex.sets.filter(s => s.completed);
+      if (done.length > 0) {
+        completedSetsCount += done.length;
+        const topW = Math.max(...done.map(s => s.weightKg));
+        done.forEach(s => { vol += (s.weightKg * s.reps); });
+        exSummaries.push({
+          name: ex.name,
+          topWeight: topW,
+          reps: done.map(s => s.reps).join(", ")
+        });
+      }
+    });
+
+    const newLog = {
+      title: activeSessionData.title,
+      date: new Date().toISOString(),
+      durationMin: Math.max(1, Math.round(activeWorkoutSeconds / 60)),
+      totalVolumeKg: vol,
+      totalSets: completedSetsCount,
+      exercises: exSummaries
+    };
+
+    workoutHistory.unshift(newLog);
+    localStorage.setItem("ironhome_history", JSON.stringify(workoutHistory));
+    clearInterval(activeWorkoutTimer);
+    closeWorkoutModal();
+    renderHistory();
+    alert(`🎉 Workout Logged!\n\nDuration: ${newLog.durationMin} mins\nVolume: ${Math.round(vol)} kg\nSets: ${completedSetsCount}`);
+  }
+
+  function discardActiveWorkout() {
+    if (confirm("Discard current workout session?")) {
+      clearInterval(activeWorkoutTimer);
+      closeWorkoutModal();
+    }
+  }
+
+  // REST TIMER IMPLEMENTATION
+  function updateTimerDisplay() {
+    const m = Math.floor(timerRemainingSeconds / 60).toString().padStart(2, "0");
+    const s = (timerRemainingSeconds % 60).toString().padStart(2, "0");
+    const formatted = `${m}:${s}`;
+
+    document.getElementById("timer-countdown-digits").innerText = formatted;
+    document.getElementById("float-time-digits").innerText = formatted;
+
+    const ring = document.getElementById("timer-progress-ring");
+    const progress = timerRemainingSeconds / timerTotalSeconds;
+    const offset = 628 * (1 - progress);
+    ring.style.strokeDashoffset = offset;
+  }
+
+  function startTimerWithSeconds(sec) {
+    timerTotalSeconds = sec;
+    timerRemainingSeconds = sec;
+    isTimerRunning = true;
+    document.getElementById("floating-timer").classList.add("active");
+    document.getElementById("timer-toggle-btn").innerText = "Pause";
+    document.getElementById("timer-state-label").innerText = "RESTING";
+
+    if (timerInterval) clearInterval(timerInterval);
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+      if (timerRemainingSeconds > 0) {
+        timerRemainingSeconds--;
+        updateTimerDisplay();
+      } else {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        document.getElementById("timer-state-label").innerText = "READY!";
+        document.getElementById("floating-timer").classList.remove("active");
+        playTimerTone();
+      }
+    }, 1000);
+  }
+
+  function toggleTimer() {
+    if (isTimerRunning) {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      document.getElementById("timer-toggle-btn").innerText = "Resume";
+      document.getElementById("timer-state-label").innerText = "PAUSED";
+    } else {
+      if (timerRemainingSeconds <= 0) timerRemainingSeconds = timerTotalSeconds;
+      startTimerWithSeconds(timerRemainingSeconds);
+    }
+  }
+
+  function addTimerSeconds(s) {
+    timerRemainingSeconds += s;
+    timerTotalSeconds += s;
+    updateTimerDisplay();
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    isTimerRunning = false;
+    timerRemainingSeconds = timerTotalSeconds;
+    updateTimerDisplay();
+    document.getElementById("floating-timer").classList.remove("active");
+    document.getElementById("timer-toggle-btn").innerText = "Start";
+  }
+
+  function playTimerTone() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+    } catch (e) {}
+  }
+
+  // TAB NAVIGATION
+  function switchTab(tabId, el) {
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.querySelectorAll(".tab-item").forEach(i => i.classList.remove("active"));
+    document.getElementById(`tab-${tabId}`).classList.add("active");
+    el.classList.add("active");
+  }
+
+  function clearWorkoutData() {
+    if (confirm("Clear all logged history?")) {
+      workoutHistory = [];
+      localStorage.removeItem("ironhome_history");
+      renderHistory();
+      alert("Workout history cleared.");
+    }
+  }
+
+  // BOOTSTRAP
+  renderSchedule();
+  renderExercises();
+  renderHistory();
+  updateTimerDisplay();
+</script>
+</body>
+</html>
